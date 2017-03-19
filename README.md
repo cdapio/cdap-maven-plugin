@@ -4,7 +4,7 @@
 
 This repository has collection of CDAP Maven Plugins. 
 
-## Creation of CDAP Plugin JSON
+## CDAP Plugin JSON
 
 This Maven plugin allows one to create plugin JSON. 
 
@@ -19,7 +19,11 @@ This Maven plugin allows one to create plugin JSON.
 
 ### Maven Goal
 
-```create-plugin-json```
+This plugin allows you to specify a maven goal that would generate the plugin json file ```create-plugin-json```. The result of create will be placed in ```${project.build}``` directory. 
+
+To run only the goal 
+
+```mvn cdap:create-plugin-json```
 
 ### Example POM
 
