@@ -12,10 +12,14 @@ This Maven plugin allows one to create plugin JSON.
 
 | Configuration | Required | Default | Description |
 | :------------ | :------: | :----- | :---------- |
-| **versionRange* | **N** | [4.0.0,10.0.0-SNAPSHOT) | Specifies the parent pipeline version range.|
+| **versionRange** | **N** | [4.0.0,10.0.0-SNAPSHOT) | Specifies the parent pipeline version range.|
 | **cdapArtifacts** | **Y** | N/A | Specifies all the parent CDAP artifacts and scope this plugin is applicable for.|
 | **widgetsDirectory** | **N** | ```${project.dir}/widgets``` | Specifies alternate widgets directory.|
 | **docsDirectory** | **N** | ```${project.dir}/docs``` | Specifies alternate widgets directory.|
+
+### Maven Goal
+
+```create-plugin-json```
 
 ### Example POM
 
