@@ -23,23 +23,22 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.FileUtils;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * This mojo is used for creating the JSON file required for the plugin.
+ * This mojo is used for creating the CDAP Plugin JSON file.
  */
 @Mojo(name = "create-plugin-json")
-public class PluginJSONCreator extends AbstractMojo {
+public class PluginJSON extends AbstractMojo {
 
   @Parameter(alias="version-range", defaultValue = "[4.0.0,10.0.0-SNAPSHOT)", required = false)
   private String versionRange;
@@ -56,33 +55,51 @@ public class PluginJSONCreator extends AbstractMojo {
   @Parameter(defaultValue="${project}", readonly=true, required=true)
   private MavenProject project;
 
+  /**
+   * The base project directory.
+   */
   private File baseDirectory;
+
+  /**
+   * Directory where plugin widget(s) are stored.
+   */
   private File widgetDirectory;
+
+  /**
+   * Directory where plugin documentation(s) is stored.
+   */
   private File docDirectory;
+
+  /**
+   * Target directory where all the build artifacts are stored.
+   */
   private File buildDirectory;
+
+  /**
+   * Project artifact Id.
+   */
   private String artifactId;
+
+  /**
+   * Project group Id.
+   */
   private String groupId;
+
+  /**
+   * Version of the project.
+   */
   private String version;
 
+  /**
+   *
+   * @throws MojoExecutionException
+   */
   public void execute()  throws MojoExecutionException {
+    // Read in all the configurations.
     initialize();
+
+    // Print header.
     printHeader();
-
-    File outputFile = new File(project.getBuild().getDirectory(),
-                               project.getArtifactId() + "-" +
-                               project.getVersion() + ".json");
-
-    if (outputFile.exists()) {
-      outputFile.delete();
-    }
-
-    try {
-      outputFile.createNewFile();
-    } catch (IOException e) {
-      throw new MojoExecutionException(
-        String.format("Failed to create file '%s'. %s", outputFile.getName(), e.getMessage())
-      );
-    }
 
     // Checks if the widget path specified by the user is a directory or not. If the path specified is not
     // not directory, then we would bail from further processing.
@@ -93,8 +110,7 @@ public class PluginJSONCreator extends AbstractMojo {
       );
     }
 
-    // Now, we iterate through each of the files in the widget path. We process each widget file.
-
+    // We iterate through widgets and documentation directories creating the output configurations.
     JSONObject output = new JSONObject();
     JSONObject properties = new JSONObject();
     for (Map.Entry<String, String> entry : getDocumentation(docDirectory).entrySet()) {
@@ -106,12 +122,17 @@ public class PluginJSONCreator extends AbstractMojo {
     output.put("properties", properties);
     JSONArray artifacts = new JSONArray();
     for (String artifact : cdapArtifacts) {
-      artifacts.add(String.format("%s%s", artifact, versionRange));
+      artifacts.put(String.format("%s%s", artifact, versionRange));
     }
     output.put("parents", artifacts);
 
     try {
-      FileUtils.fileWrite(outputFile, output.toJSONString());
+      File outputFile = new File(buildDirectory, artifactId + "-" + version + ".json");
+      if (outputFile.exists()) {
+        outputFile.delete();
+      }
+      outputFile.createNewFile();
+      FileUtils.fileWrite(outputFile, output.toString(2));
       getLog().info("Successfully created  : " + project.getArtifactId() + "-" +
                       project.getVersion() + ".json");
     } catch (IOException e) {
@@ -122,11 +143,21 @@ public class PluginJSONCreator extends AbstractMojo {
   }
 
 
+  /**
+   * Inspects all the Widget files to generate properties to be included in plugin JSON.
+   *
+   * @param directory where widgets are stored.
+   * @return Map of property and correspoinding widget JSON.
+   * @throws MojoExecutionException thrown in case of any execution error.
+   */
   private Map<String, String> getWidgets(File directory) throws MojoExecutionException {
-    JSONParser parser = new JSONParser();
     Map<String, String> properties = new TreeMap<String, String>();
     File[] files = directory.listFiles();
+
+    // Iterate through all widget files.
     for (File file : files) {
+
+      // If it's not a file, skip the file.
       if (!file.isFile()) {
         getLog().warn(
           String.format("Widget path '%s' is not a file. Skipping", file.getPath())
@@ -143,25 +174,39 @@ public class PluginJSONCreator extends AbstractMojo {
       }
 
       String name = file.getName();
-      FileReader reader = null;
       try {
-        reader = new FileReader(file.getAbsoluteFile());
-        JSONObject object = (JSONObject) parser.parse(reader);
-        properties.put(String.format("%s.%s", "widgets", FileUtils.removeExtension(name)), object.toJSONString());
+        JSONTokener tokener = new JSONTokener(FileUtils.fileRead(file.getAbsoluteFile(), "UTF-8"));
+        JSONObject object = new JSONObject(tokener);
+        properties.put(String.format("%s.%s", "widgets", FileUtils.removeExtension(name)), object.toString(2));
       } catch (FileNotFoundException e) {
-        throw new MojoExecutionException(e.getMessage());
-      } catch (ParseException e) {
-        throw new MojoExecutionException(e.getMessage());
+        throw new MojoExecutionException(
+          String.format("Unable to access Widget file '%s' or not found. %s", file.getName(), e.getMessage())
+        );
+      } catch (JSONException e) {
+        throw new MojoExecutionException(
+          String.format("Widget file '%s' has incorrect JSON. %s", file.getName(), e.getMessage())
+        );
       } catch (IOException e) {
-        throw new MojoExecutionException(e.getMessage());
+        throw new MojoExecutionException(
+          String.format("Issue reading Widget file '%s'. %s", file.getName(), e.getMessage())
+        );
       }
     }
     return properties;
   }
 
+  /**
+   * Inspects all the Documentation files to generate properties to be included in plugin JSON.
+   *
+   * @param directory where documentations are stored.
+   * @return Map of property and correspoinding Markdown documentation.
+   * @throws MojoExecutionException thrown in case of any execution error.
+   */
   private Map<String, String> getDocumentation(File directory) throws MojoExecutionException {
     Map<String, String> properties = new TreeMap<String, String>();
     File[] files = directory.listFiles();
+
+    // Iterate through all markdown files.
     for (File file : files) {
       if (!file.isFile()) {
         getLog().warn(
@@ -179,19 +224,26 @@ public class PluginJSONCreator extends AbstractMojo {
       }
 
       String name = file.getName();
-      FileReader reader = null;
       try {
         properties.put(String.format("%s.%s", "doc", FileUtils.removeExtension(name)),
                                      FileUtils.fileRead(file.getAbsoluteFile(), "UTF-8"));
       } catch (FileNotFoundException e) {
-        throw new MojoExecutionException(e.getMessage());
+        throw new MojoExecutionException(
+          String.format("Unable to access Documentation file '%s' or not found. %s",
+                        file.getName(), e.getMessage())
+        );
       } catch (IOException e) {
-        throw new MojoExecutionException(e.getMessage());
+        throw new MojoExecutionException(
+          String.format("Issue reading Documentation file '%s'. %s", file.getName(), e.getMessage())
+        );
       }
     }
     return properties;
   }
 
+  /**
+   * Initializes this Mojo, extracts all necessary paths and configurations.
+   */
   private void initialize() {
     groupId = project.getGroupId();
     artifactId = project.getArtifactId();
@@ -211,6 +263,9 @@ public class PluginJSONCreator extends AbstractMojo {
     }
   }
 
+  /**
+   * Prints the header for this mojo with all the information it needs to execute correctly.
+   */
   private void printHeader() {
     getLog().info(StringUtils.repeat('-', 72));
     getLog().info("CDAP Plugin JSON");
@@ -231,6 +286,9 @@ public class PluginJSONCreator extends AbstractMojo {
     getLog().info(StringUtils.repeat('-', 72));
   }
 
+  /**
+   * Prints footer. 
+   */
   private void printFooter() {
     getLog().info(StringUtils.repeat('-', 72));
   }
