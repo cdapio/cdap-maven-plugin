@@ -16,6 +16,8 @@
 
 package co.cask;
 
+import org.apache.commons.codec.binary.Base64OutputStream;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -28,9 +30,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URLConnection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -40,10 +46,10 @@ import java.util.TreeMap;
 @Mojo(name = "create-plugin-json")
 public class PluginJSON extends AbstractMojo {
 
-  @Parameter(alias="version-range", defaultValue = "[4.0.0,10.0.0-SNAPSHOT)", required = false)
+  @Parameter(alias = "version-range", defaultValue = "[4.0.0,10.0.0-SNAPSHOT)", required = false)
   private String versionRange;
 
-  @Parameter(alias="cdap-artifacts", required = true)
+  @Parameter(alias = "cdap-artifacts", required = true)
   private String[] cdapArtifacts;
 
   @Parameter(defaultValue = "docs")
@@ -52,7 +58,10 @@ public class PluginJSON extends AbstractMojo {
   @Parameter(defaultValue = "widgets")
   private String widgetsDirectory;
 
-  @Parameter(defaultValue="${project}", readonly=true, required=true)
+  @Parameter(defaultValue = "icons")
+  private String iconsDirectory;
+
+  @Parameter(defaultValue = "${project}", readonly = true, required = true)
   private MavenProject project;
 
   /**
@@ -64,6 +73,11 @@ public class PluginJSON extends AbstractMojo {
    * Directory where plugin widget(s) are stored.
    */
   private File widgetDirectory;
+
+  /**
+   * Directory where plugin icon(s) are stored
+   */
+  private File iconDirectory;
 
   /**
    * Directory where plugin documentation(s) is stored.
@@ -94,21 +108,12 @@ public class PluginJSON extends AbstractMojo {
    *
    * @throws MojoExecutionException
    */
-  public void execute()  throws MojoExecutionException {
+  public void execute() throws MojoExecutionException {
     // Read in all the configurations.
     initialize();
 
     // Print header.
     printHeader();
-
-    // Checks if the widget path specified by the user is a directory or not. If the path specified is not
-    // not directory, then we would bail from further processing.
-    if (! widgetDirectory.isDirectory()) {
-      throw new MojoExecutionException(
-        String.format("Widgets path '%s' specified is not a directory or directory not present",
-                      widgetDirectory.getPath())
-      );
-    }
 
     // We iterate through widgets and documentation directories creating the output configurations.
     JSONObject output = new JSONObject();
@@ -154,6 +159,8 @@ public class PluginJSON extends AbstractMojo {
     Map<String, String> properties = new TreeMap<String, String>();
     File[] files = directory.listFiles();
 
+    Map<String, File> iconFiles = getFileNameMap(iconDirectory.listFiles());
+
     // Iterate through all widget files.
     for (File file : files) {
 
@@ -166,7 +173,7 @@ public class PluginJSON extends AbstractMojo {
       }
 
       String ext = FileUtils.extension(file.getName());
-      if (! ext.equalsIgnoreCase("json")) {
+      if (!ext.equalsIgnoreCase("json")) {
         getLog().warn(
           String.format("Skipping non JSON file '%s'", file.getName())
         );
@@ -177,7 +184,10 @@ public class PluginJSON extends AbstractMojo {
       try {
         JSONTokener tokener = new JSONTokener(FileUtils.fileRead(file.getAbsoluteFile(), "UTF-8"));
         JSONObject object = new JSONObject(tokener);
-        properties.put(String.format("%s.%s", "widgets", FileUtils.removeExtension(name)), object.toString(2));
+
+        String fileName = FileUtils.removeExtension(name);
+        addIcon(object, iconFiles, fileName);
+        properties.put(String.format("%s.%s", "widgets", fileName), object.toString(2));
       } catch (FileNotFoundException e) {
         throw new MojoExecutionException(
           String.format("Unable to access Widget file '%s' or not found. %s", file.getName(), e.getMessage())
@@ -196,6 +206,56 @@ public class PluginJSON extends AbstractMojo {
   }
 
   /**
+   * Inspects all the Icon files to add properties to related widget.
+   */
+  private void addIcon(JSONObject widgetsJson, Map<String, File> iconFiles, String fileName) throws IOException {
+    if (iconFiles.containsKey(fileName)) {
+      JSONObject iconObject = new JSONObject();
+      iconObject.put("type", "inline");
+      Map<String, String> arguments = new TreeMap<>();
+      File file = iconFiles.get(fileName);
+      String mediaType = URLConnection.guessContentTypeFromName(file.getName());
+      arguments.put("data", getDataURISchemaAsString(file, mediaType));
+      iconObject.put("arguments", arguments);
+      widgetsJson.put("icon", iconObject);
+    }
+  }
+
+  /**
+   * Returns the Data URI Scheme of File
+   */
+  private String getDataURISchemaAsString(File file, String mediaType) throws IOException {
+    try (FileInputStream inStream = new FileInputStream(file);
+         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+         Base64OutputStream outStreamBase64 = new Base64OutputStream(outStream)) {
+      IOUtils.copy(inStream, outStreamBase64);
+      outStreamBase64.flush();
+      return "data:" + mediaType + ";base64," + outStream.toString();
+    }
+  }
+
+  /**
+   * Remove extensions from files in directory and return a map of names to files.
+   */
+  private Map<String, File> getFileNameMap(File[] listFiles) {
+    Map<String, File> names = new HashMap<>();
+
+    if (listFiles != null) {
+      for (File file : listFiles) {
+        String fileName = FileUtils.removeExtension(file.getName());
+        if (names.containsKey(fileName)) {
+          getLog().warn(String.format("'%s' is being ignored. '%s' will be used.", file.getName(),
+                                      names.get(fileName).getName()));
+        } else {
+          names.put(fileName, file);
+        }
+      }
+    }
+
+    return names;
+  }
+
+  /**
    * Inspects all the Documentation files to generate properties to be included in plugin JSON.
    *
    * @param directory where documentations are stored.
@@ -203,7 +263,7 @@ public class PluginJSON extends AbstractMojo {
    * @throws MojoExecutionException thrown in case of any execution error.
    */
   private Map<String, String> getDocumentation(File directory) throws MojoExecutionException {
-    Map<String, String> properties = new TreeMap<String, String>();
+    Map<String, String> properties = new TreeMap<>();
     File[] files = directory.listFiles();
 
     // Iterate through all markdown files.
@@ -216,7 +276,7 @@ public class PluginJSON extends AbstractMojo {
       }
 
       String ext = FileUtils.extension(file.getName());
-      if (! ext.equalsIgnoreCase("md")) {
+      if (!ext.equalsIgnoreCase("md")) {
         getLog().warn(
           String.format("Skipping non JSON file '%s'", file.getName())
         );
@@ -244,23 +304,35 @@ public class PluginJSON extends AbstractMojo {
   /**
    * Initializes this Mojo, extracts all necessary paths and configurations.
    */
-  private void initialize() {
+  private void initialize() throws MojoExecutionException {
     groupId = project.getGroupId();
     artifactId = project.getArtifactId();
     version = project.getVersion();
     baseDirectory = project.getBasedir();
     buildDirectory = new File(project.getBuild().getDirectory());
-    if (!widgetsDirectory.contains("/")) {
-      widgetDirectory = new File(project.getBasedir() + "/" + widgetsDirectory);
+    widgetDirectory = getAndValidate(baseDirectory, widgetsDirectory);
+    iconDirectory = getAndValidate(baseDirectory, iconsDirectory);
+    docDirectory = getAndValidate(baseDirectory, docsDirectory);
+  }
+
+  /**
+   * Validate directory based on project
+   */
+  private File getAndValidate(File baseDirectory, String directoryPath) throws MojoExecutionException {
+    File directory;
+    if (directoryPath.startsWith("/")) {
+      directory = new File(directoryPath);
     } else {
-      widgetDirectory = new File(widgetsDirectory);
+      directory = new File(baseDirectory, directoryPath);
     }
 
-    if (!docsDirectory.contains("/")) {
-      docDirectory = new File(project.getBasedir() + "/" + docsDirectory);
-    } else {
-      docDirectory = new File(docsDirectory);
+    if (!directory.exists()) {
+      throw new MojoExecutionException(String.format("'%s' does not exist.", directoryPath));
     }
+    if (!directory.isDirectory()) {
+      throw new MojoExecutionException(String.format("'%s' is not a directory.", directoryPath));
+    }
+    return directory;
   }
 
   /**
@@ -277,6 +349,7 @@ public class PluginJSON extends AbstractMojo {
     getLog().info("Base Directory       : " + project.getBasedir());
     getLog().info("Build Directory      : " + project.getBuild().getDirectory());
     getLog().info("Widgets Directory    : " + widgetDirectory.getPath());
+    getLog().info("Icons Directory      : " + iconDirectory.getPath());
     getLog().info("Docs Directory       : " + docDirectory.getPath());
     getLog().info("Plugin Version Range : " + versionRange);
     getLog().info("CDAP Artifacts");
