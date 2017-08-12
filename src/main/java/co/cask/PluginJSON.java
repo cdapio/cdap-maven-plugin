@@ -18,7 +18,6 @@ package co.cask;
 
 import org.apache.commons.codec.binary.Base64OutputStream;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -45,9 +44,6 @@ import java.util.TreeMap;
  */
 @Mojo(name = "create-plugin-json")
 public class PluginJSON extends AbstractMojo {
-
-  @Parameter(alias = "version-range", defaultValue = "[4.0.0,10.0.0-SNAPSHOT)", required = false)
-  private String versionRange;
 
   @Parameter(alias = "cdap-artifacts", required = true)
   private String[] cdapArtifacts;
@@ -127,7 +123,7 @@ public class PluginJSON extends AbstractMojo {
     output.put("properties", properties);
     JSONArray artifacts = new JSONArray();
     for (String artifact : cdapArtifacts) {
-      artifacts.put(String.format("%s%s", artifact, versionRange));
+      artifacts.put(artifact);
     }
     output.put("parents", artifacts);
 
@@ -137,7 +133,7 @@ public class PluginJSON extends AbstractMojo {
         outputFile.delete();
       }
       outputFile.createNewFile();
-      FileUtils.fileWrite(outputFile, output.toString(2));
+      FileUtils.fileWrite(outputFile.getAbsolutePath(), output.toString(2));
       getLog().info("Successfully created  : " + project.getArtifactId() + "-" +
                       project.getVersion() + ".json");
     } catch (IOException e) {
@@ -339,9 +335,9 @@ public class PluginJSON extends AbstractMojo {
    * Prints the header for this mojo with all the information it needs to execute correctly.
    */
   private void printHeader() {
-    getLog().info(StringUtils.repeat('-', 72));
+    getLog().info(repeat("-", 72));
     getLog().info("CDAP Plugin JSON");
-    getLog().info(StringUtils.repeat('-', 72));
+    getLog().info(repeat("-", 72));
     getLog().info("Project              : " + project.getName());
     getLog().info("Group ID             : " + project.getGroupId());
     getLog().info("Artifact ID          : " + project.getArtifactId());
@@ -351,18 +347,29 @@ public class PluginJSON extends AbstractMojo {
     getLog().info("Widgets Directory    : " + widgetDirectory.getPath());
     getLog().info("Icons Directory      : " + iconDirectory.getPath());
     getLog().info("Docs Directory       : " + docDirectory.getPath());
-    getLog().info("Plugin Version Range : " + versionRange);
     getLog().info("CDAP Artifacts");
     for (String artifact : cdapArtifacts) {
       getLog().info(" " + artifact);
     }
-    getLog().info(StringUtils.repeat('-', 72));
+    getLog().info(repeat("-", 72));
   }
 
   /**
    * Prints footer. 
    */
   private void printFooter() {
-    getLog().info(StringUtils.repeat('-', 72));
+    getLog().info(repeat("-", 72));
+  }
+
+  /**
+   * Repeats text for specified number of times
+   */
+  private String repeat(String text, int numRepetitions) {
+    StringBuilder builder = new StringBuilder();
+    for (int i = 0; i < numRepetitions; i++) {
+      builder.append(text);
+    }
+
+    return builder.toString();
   }
 }

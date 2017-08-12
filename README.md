@@ -13,7 +13,6 @@ This Maven plugin allows one to create plugin JSON.
 | Configuration | Required | Default | Description |
 | :------------ | :------: | :----- | :---------- |
 | **cdapArtifacts** | **Y** | N/A | Specifies all the parent CDAP artifacts and scope this plugin is applicable for.|
-| **versionRange** | **N** | [4.0.0,10.0.0-SNAPSHOT) | Specifies the parent pipeline version range.|
 | **widgetsDirectory** | **N** | ```${project.dir}/widgets``` | Specifies alternate widgets directory.|
 | **docsDirectory** | **N** | ```${project.dir}/docs``` | Specifies alternate documentation directory.|
 | **iconsDirectory** | **N** | ```${project.dir}/icons``` | Specifies alternate icons directory.|
@@ -34,10 +33,9 @@ To run only the goal
   <artifactId>cdap-maven-plugin</artifactId>
   <version>1.0-SNAPSHOT</version>
   <configuration>
-    <versionRange>[4.0.0,9.0.0-SNAPSHOT)</versionRange>
     <cdapArtifacts>
-       <param>system:cdap-data-pipeline</param>
-       <param>system:cdap-data-streams</param>
+       <parent>system:cdap-data-pipeline[4.0.0,9.0.0-SNAPSHOT)</parent>
+       <parent>system:cdap-data-streams[4.0.0,9.0.0-SNAPSHOT)</parent>
     </cdapArtifacts>
    </configuration>
    <executions>
@@ -70,10 +68,9 @@ To run only the goal
 [INFO] Build Directory      : /Users/nitin/Work/Devel/plugin-json-test/target
 [INFO] Widgets Directory    : /Users/nitin/Work/Devel/plugin-json-test/widgets
 [INFO] Docs Directory       : /Users/nitin/Work/Devel/plugin-json-test/docs
-[INFO] Plugin Version Range : [4.0.0,9.0.0-SNAPSHOT)
 [INFO] CDAP Artifacts
-[INFO]  system:cdap-data-pipeline
-[INFO]  system:cdap-data-streams
+[INFO]  system:cdap-data-pipeline[4.0.0,9.0.0-SNAPSHOT)
+[INFO]  system:cdap-data-streams[4.0.0,9.0.0-SNAPSHOT)
 [INFO] ------------------------------------------------------------------------
 [INFO] Successfully created  : trash-plugin-1.1.0-SNAPSHOT.json
 [INFO] ------------------------------------------------------------------------
