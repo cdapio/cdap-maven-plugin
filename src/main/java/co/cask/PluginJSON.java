@@ -300,7 +300,7 @@ public class PluginJSON extends AbstractMojo {
   /**
    * Initializes this Mojo, extracts all necessary paths and configurations.
    */
-  private void initialize() throws MojoExecutionException {
+  private void initialize() {
     groupId = project.getGroupId();
     artifactId = project.getArtifactId();
     version = project.getVersion();
@@ -314,7 +314,7 @@ public class PluginJSON extends AbstractMojo {
   /**
    * Validate directory based on project
    */
-  private File getAndValidate(File baseDirectory, String directoryPath) throws MojoExecutionException {
+  private File getAndValidate(File baseDirectory, String directoryPath) {
     File directory;
     if (directoryPath.startsWith("/")) {
       directory = new File(directoryPath);
@@ -323,10 +323,10 @@ public class PluginJSON extends AbstractMojo {
     }
 
     if (!directory.exists()) {
-      throw new MojoExecutionException(String.format("'%s' does not exist.", directoryPath));
+      getLog().warn(String.format("'%s' does not exist.", directoryPath));
     }
     if (!directory.isDirectory()) {
-      throw new MojoExecutionException(String.format("'%s' is not a directory.", directoryPath));
+      getLog().warn(String.format("'%s' is not a directory.", directoryPath));
     }
     return directory;
   }
