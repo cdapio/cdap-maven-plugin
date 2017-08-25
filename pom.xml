@@ -65,7 +65,80 @@
   </dependencies>
 
   <profiles>
-    
+      <!-- Profile for release. Includes building of source and javadoc jars. -->
+    <profile>
+      <id>release</id>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-source-plugin</artifactId>
+              <version>2.2.1</version>
+              <configuration>
+                <excludeResources>true</excludeResources>
+              </configuration>
+              <executions>
+                <execution>
+                  <id>attach-sources</id>
+                  <phase>package</phase>
+                  <goals>
+                    <goal>jar-no-fork</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-javadoc-plugin</artifactId>
+              <version>2.9.1</version>
+              <configuration>
+                <stylesheetfile>cdap-distributions/src/javadoc/stylesheet.css</stylesheetfile>
+                <bottom>
+                  <![CDATA[Copyright &#169; {currentYear} <a href="http://cask.co" target="_blank">Cask Data, Inc.</a> Licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache License, Version 2.0</a>.]]>
+                </bottom>
+                <doctitle>${project.name} ${project.version}</doctitle>
+                <links>
+                  <link>https://caskdata.github.io/docs-site/hosted-javadocs/jsr305-${findbugs.jsr305.version}-javadoc/</link>
+                  <link>http://avro.apache.org/docs/${avro.version}/api/java/</link>
+                  <link>http://docs.oracle.com/javaee/${jee.version}/api/</link>
+                  <link>http://hadoop.apache.org/docs/r${hadoop.version}/api/</link>
+                  <link>http://twill.incubator.apache.org/apidocs-${twill.version}/</link>
+                  <link>http://twitter4j.org/javadoc/</link>
+                </links>
+                <quiet>true</quiet>
+              </configuration>
+              <executions>
+                <execution>
+                  <id>attach-javadoc</id>
+                  <phase>package</phase>
+                  <goals>
+                    <goal>jar</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.5</version>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>2.2.1</version>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>2.9.1</version>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <!-- Profile for dist -->
     <profile>
       <id>dist</id>
