@@ -479,8 +479,209 @@
     </profile>
   </profiles>
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.1</version>
+          <configuration>
+            <source>1.7</source>
+            <target>1.7</target>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.14.1</version>
+          <configuration>
+            <argLine>-Xmx5000m -Djava.awt.headless=true -XX:MaxPermSize=256m -XX:+UseConcMarkSweepGC -XX:OnOutOfMemoryError="kill -9 %p" -XX:+HeapDumpOnOutOfMemoryError</argLine>
+            <redirectTestOutputToFile>${surefire.redirectTestOutputToFile}</redirectTestOutputToFile>
+            <reuseForks>false</reuseForks>
+            <reportFormat>plain</reportFormat>
+            <trimStackTrace>false</trimStackTrace>
+            <systemPropertyVariables>
+              <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
+            </systemPropertyVariables>
+            <includes>
+              <include>**/*TestsSuite.java</include>
+              <include>**/*TestSuite.java</include>
+              <include>**/Test*.java</include>
+              <include>**/*Test.java</include>
+              <include>**/*TestCase.java</include>
+            </includes>
+            <excludes>
+              <exclude>**/*TestRun.java</exclude>
+              <exclude>**/*TestBase.java</exclude>
+            </excludes>
+          </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.apache.maven.surefire</groupId>
+              <artifactId>surefire-junit47</artifactId>
+              <version>2.14</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.rat</groupId>
+          <artifactId>apache-rat-plugin</artifactId>
+          <version>0.10</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.apache.maven.doxia</groupId>
+              <artifactId>doxia-core</artifactId>
+              <version>1.6</version>
+              <exclusions>
+                <exclusion>
+                  <groupId>xerces</groupId>
+                  <artifactId>xercesImpl</artifactId>
+                </exclusion>
+              </exclusions>
+            </dependency>
+          </dependencies>
+          <executions>
+            <execution>
+              <id>rat-check</id>
+              <phase>validate</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <configuration>
+                <excludes>
+                  <exclude>build-number.txt</exclude>
+                  <exclude>LICENSE*.txt</exclude>
+                  <exclude>*.rst</exclude>
+                  <exclude>*.md</exclude>
+                  <exclude>**/*.md</exclude>
+                  <exclude>logs/**</exclude>
+                  <exclude>cdap-docs/**</exclude>
+                  <exclude>**/grok/patterns/**</exclude>
+                  <exclude>conf/**</exclude>
+                  <exclude>data/**</exclude>
+                  <exclude>plugins/**</exclude>
+                  <exclude>**/Apache-LICENSE-2.0</exclude>
+                  <exclude>**/VERSION</exclude>
+                  <exlcude>**/*.patch</exlcude>
+                  <exclude>**/logrotate.d/**</exclude>
+                  <exclude>**/limits.d/**</exclude>
+                  <!-- Excludes AVRO schema files -->
+                  <exclude>**/*.avsc</exclude>
+                  <!-- Excludes examples by default, include it in the examples profile -->
+                  <exclude>cdap-examples/**</exclude>
+                  <!-- Excludes app-templates by default, include it in the templates profile -->
+                  <exclude>cdap-app-templates/**</exclude>
+                  <exclude>**/*.json</exclude>
+                  <exclude>**/resources/**/*.properties</exclude>
+                  <exclude>**/*.json.template</exclude>
+                  <exclude>**/MANIFEST.MF</exclude>
+                  <exclude>**/.rubocop*.yml</exclude>
+                </excludes>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <version>2.17</version>
+          <executions>
+            <execution>
+              <id>validate</id>
+              <phase>process-test-classes</phase>
+              <configuration>
+                <configLocation>checkstyle.xml</configLocation>
+                <suppressionsLocation>suppressions.xml</suppressionsLocation>
+                <encoding>UTF-8</encoding>
+                <consoleOutput>true</consoleOutput>
+                <failsOnError>true</failsOnError>
+                <includeTestSourceDirectory>true</includeTestSourceDirectory>
+              </configuration>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+          <dependencies>
+            <dependency>
+              <groupId>com.puppycrawl.tools</groupId>
+              <artifactId>checkstyle</artifactId>
+              <version>6.19</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+
+        <!-- Scala code compilation -->
+        <plugin>
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <version>3.2.2</version>
+          <configuration>
+            <args>
+              <arg>-target:jvm-1.7</arg>
+            </args>
+          </configuration>
+          <executions>
+            <execution>
+              <id>scala-add-source</id>
+              <goals>
+                <goal>add-source</goal>
+              </goals>
+            </execution>
+            <execution>
+              <id>scala-compile</id>
+              <!-- Needs to be before the compile phase -->
+              <phase>process-resources</phase>
+              <goals>
+                <goal>compile</goal>
+              </goals>
+            </execution>
+            <execution>
+              <id>scala-test-compile</id>
+              <!-- Needs to be before the test-compile phase -->
+              <phase>process-test-resources</phase>
+              <goals>
+                <goal>testCompile</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <!-- GPG signature -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-gpg-plugin</artifactId>
+          <version>1.5</version>
+          <configuration>
+            <passphrase>${gpg.passphrase}</passphrase>
+            <useAgent>${gpg.useagent}</useAgent>
+          </configuration>
+          <executions>
+            <execution>
+              <goals>
+                <goal>sign</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <!-- Nexus deploy plugin -->
+        <plugin>
+          <groupId>org.sonatype.plugins</groupId>
+          <artifactId>nexus-staging-maven-plugin</artifactId>
+          <version>1.6.2</version>
+          <extensions>true</extensions>
+          <configuration>
+            <nexusUrl>https://oss.sonatype.org</nexusUrl>
+            <serverId>sonatype.release</serverId>
+            <stagingProfileId>655dc88dc770c3</stagingProfileId>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
     <plugins>
-     <plugin>
+      <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
         <version>0.10</version>
