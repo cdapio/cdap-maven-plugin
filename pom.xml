@@ -6,8 +6,37 @@
   <artifactId>cdap-maven-plugin</artifactId>
   <version>1.0.0</version>
   <packaging>maven-plugin</packaging>
-  <name>cask-maven-plugin Maven Plugin</name>
+  <description>cask-maven-plugin Maven Plugin</description>
   <url>http://cask.co</url>
+
+  <organization>
+    <name>Cask Data, Inc.</name>
+    <url>http://cask.co</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Cask Data</name>
+      <email>cask-dev@googlegroups.com</email>
+      <organization>Cask Data, Inc.</organization>
+      <organizationUrl>http://www.cask.co</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:https://github.com/caskdata/cdap-maven-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:caskdata/cdap-maven-plugin.git</developerConnection>
+    <url>https://github.com/caskdata/cdap-maven-plugin.git</url>
+    <tag>HEAD</tag>
+  </scm>
+
 
   <distributionManagement>
     <repository>
