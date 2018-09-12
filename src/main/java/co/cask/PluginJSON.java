@@ -100,10 +100,6 @@ public class PluginJSON extends AbstractMojo {
    */
   private String version;
 
-  /**
-   *
-   * @throws MojoExecutionException
-   */
   public void execute() throws MojoExecutionException {
     // Read in all the configurations.
     initialize();
@@ -114,10 +110,10 @@ public class PluginJSON extends AbstractMojo {
     // We iterate through widgets and documentation directories creating the output configurations.
     JSONObject output = new JSONObject();
     JSONObject properties = new JSONObject();
-    for (Map.Entry<String, String> entry : getDocumentation(docDirectory).entrySet()) {
+    for (Map.Entry<String, String> entry : getDocumentation().entrySet()) {
       properties.put(entry.getKey(), entry.getValue());
     }
-    for (Map.Entry<String, String> entry : getWidgets(widgetDirectory).entrySet()) {
+    for (Map.Entry<String, String> entry : getWidgets().entrySet()) {
       properties.put(entry.getKey(), entry.getValue());
     }
     output.put("properties", properties);
@@ -147,17 +143,22 @@ public class PluginJSON extends AbstractMojo {
   /**
    * Inspects all the Widget files to generate properties to be included in plugin JSON.
    *
-   * @param directory where widgets are stored.
    * @return Map of property and correspoinding widget JSON.
    * @throws MojoExecutionException thrown in case of any execution error.
    */
-  private Map<String, String> getWidgets(File directory) throws MojoExecutionException {
-    Map<String, String> properties = new TreeMap<String, String>();
-    File[] files = directory.listFiles();
+  private Map<String, String> getWidgets() throws MojoExecutionException {
+    Map<String, String> properties = new TreeMap<>();
+    if (widgetDirectory == null) {
+      return properties;
+    }
+    File[] files = widgetDirectory.listFiles();
+    if (files == null) {
+      return properties;
+    }
 
     Map<String, File> iconFiles = new HashMap<>();
-    if (iconDirectory.exists()) {
-       iconFiles = getFileNameMap(iconDirectory.listFiles());
+    if (iconDirectory != null && iconDirectory.exists()) {
+      iconFiles = getFileNameMap(iconDirectory.listFiles());
     }
 
     // Iterate through all widget files.
@@ -257,13 +258,18 @@ public class PluginJSON extends AbstractMojo {
   /**
    * Inspects all the Documentation files to generate properties to be included in plugin JSON.
    *
-   * @param directory where documentations are stored.
    * @return Map of property and correspoinding Markdown documentation.
    * @throws MojoExecutionException thrown in case of any execution error.
    */
-  private Map<String, String> getDocumentation(File directory) throws MojoExecutionException {
+  private Map<String, String> getDocumentation() throws MojoExecutionException {
     Map<String, String> properties = new TreeMap<>();
-    File[] files = directory.listFiles();
+    if (docDirectory == null) {
+      return properties;
+    }
+    File[] files = docDirectory.listFiles();
+    if (files == null) {
+      return properties;
+    }
 
     // Iterate through all markdown files.
     for (File file : files) {
@@ -303,24 +309,15 @@ public class PluginJSON extends AbstractMojo {
   /**
    * Initializes this Mojo, extracts all necessary paths and configurations.
    */
-  private void initialize() throws MojoExecutionException {
+  private void initialize() {
     groupId = project.getGroupId();
     artifactId = project.getArtifactId();
     version = project.getVersion();
     baseDirectory = project.getBasedir();
     buildDirectory = new File(project.getBuild().getDirectory());
     widgetDirectory = getAndValidate(baseDirectory, widgetsDirectory);
-    if (widgetDirectory == null) {
-      throw new MojoExecutionException("CDAP plugin requires a 'widgets' directory to be present.");
-    }
     iconDirectory = getAndValidate(baseDirectory, iconsDirectory);
-    if (iconDirectory == null) {
-      throw new MojoExecutionException("CDAP plugin requires a 'icons' directory to be present.");
-    }
     docDirectory = getAndValidate(baseDirectory, docsDirectory);
-    if (docDirectory == null) {
-      throw new MojoExecutionException("CDAP plugin requires a 'docs' directory to be present.");
-    }
   }
 
   /**
@@ -357,9 +354,9 @@ public class PluginJSON extends AbstractMojo {
     getLog().info("Version              : " + project.getVersion());
     getLog().info("Base Directory       : " + project.getBasedir());
     getLog().info("Build Directory      : " + project.getBuild().getDirectory());
-    getLog().info("Widgets Directory    : " + widgetDirectory.getPath());
-    getLog().info("Icons Directory      : " + iconDirectory.getPath());
-    getLog().info("Docs Directory       : " + docDirectory.getPath());
+    getLog().info("Widgets Directory    : " + widgetsDirectory);
+    getLog().info("Icons Directory      : " + iconsDirectory);
+    getLog().info("Docs Directory       : " + docsDirectory);
     getLog().info("CDAP Artifacts");
     for (String artifact : cdapArtifacts) {
       getLog().info(" " + artifact);
