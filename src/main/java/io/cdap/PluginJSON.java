@@ -14,7 +14,7 @@
  * the License.
  */
 
-package co.cask;
+package io.cdap;
 
 import org.apache.commons.codec.binary.Base64OutputStream;
 import org.apache.commons.io.IOUtils;
