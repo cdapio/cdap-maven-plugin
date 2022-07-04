@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 Cask Data, Inc.
+ * Copyright © 2022 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,6 +16,7 @@
 
 package io.cdap;
 
+import com.google.common.base.Strings;
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
@@ -62,10 +63,10 @@ public class SpecJsonCreator extends AbstractMojo {
   @Parameter(property = "description", defaultValue = "${project.description}")
   private String description;
 
-  @Parameter(property = "author", defaultValue = LIVERAMP)
+  @Parameter(property = "author")
   private String author;
 
-  @Parameter(property = "org", defaultValue = LIVERAMP)
+  @Parameter(property = "org")
   private String org;
 
   @Parameter(property = "categories")
@@ -96,7 +97,7 @@ public class SpecJsonCreator extends AbstractMojo {
    */
   private String configFilename;
 
-  public SpecJsonCreator(){
+  public SpecJsonCreator() {
     super();
   }
 
@@ -104,19 +105,19 @@ public class SpecJsonCreator extends AbstractMojo {
    * This constructor is used for testing
    */
   SpecJsonCreator(
-      String actionType,
-      String scope,
-      String[] cdapArtifacts,
-      String artifactId,
-      String version,
-      String label,
-      String description,
-      String author,
-      String org,
-      String[] categories,
-      String buildDirectory,
-      boolean isPipeline,
-      String[][] additionalActionArguments) {
+    String actionType,
+    String scope,
+    String[] cdapArtifacts,
+    String artifactId,
+    String version,
+    String label,
+    String description,
+    String author,
+    String org,
+    String[] categories,
+    String buildDirectory,
+    boolean isPipeline,
+    String[][] additionalActionArguments) {
 
     this.actionType = actionType;
     this.scope = scope;
@@ -146,8 +147,12 @@ public class SpecJsonCreator extends AbstractMojo {
     output.put(SPEC_VERSION, version);
     output.put(LABEL, label);
     output.put(DESCRIPTION, description);
-    output.put(AUTHOR, author);
-    output.put(ORG, org);
+    if (!Strings.isNullOrEmpty(author)) {
+      output.put(AUTHOR, author);
+    }
+    if (!Strings.isNullOrEmpty(org)) {
+      output.put(ORG, org);
+    }
     output.put(CREATED, created);
     output.put(CATEGORIES, categories);
     output.put(CDAP_VERSION, cdapVersion);
@@ -165,13 +170,13 @@ public class SpecJsonCreator extends AbstractMojo {
     }
 
     JSONObject actionJson = createAction(
-        actionType,
-        label,
-        version,
-        scope,
-        configFilename,
-        isPipeline,
-        additionalArguments);
+      actionType,
+      label,
+      version,
+      scope,
+      configFilename,
+      isPipeline,
+      additionalArguments);
 
     actions.put(actionJson);
     output.put(ACTIONS, actions);
@@ -183,21 +188,22 @@ public class SpecJsonCreator extends AbstractMojo {
       }
       outputFile.createNewFile();
       FileUtils.fileWrite(outputFile.getAbsolutePath(), output.toString(2));
-      getLog().info("Successfully created: "+SPEC_JSON);
+      getLog().info("Successfully created: " + SPEC_JSON);
     } catch (IOException e) {
-      throw new MojoExecutionException(e.getMessage());
+      throw new MojoExecutionException(e.getMessage(), e);
     }
 
     printFooter();
   }
 
-  private JSONObject createAction(String type,
-                                  String label,
-                                  String version,
-                                  String scope,
-                                  String config,
-                                  boolean isPipeline,
-                                  JSONArray additionalArguments) {
+  private JSONObject createAction(
+      String type,
+      String label,
+      String version,
+      String scope,
+      String config,
+      boolean isPipeline,
+      JSONArray additionalArguments) {
     JSONObject actionJson = new JSONObject();
     actionJson.put("type", type);
     actionJson.put("label", label);
@@ -214,25 +220,25 @@ public class SpecJsonCreator extends AbstractMojo {
     actionArguments.put(scopeArg);
     actionArguments.put(configArg);
 
-    for (Object addArg: additionalArguments){
+    for (Object addArg : additionalArguments) {
       actionArguments.put(addArg);
     }
 
-    if (isPipeline){
+    if (isPipeline) {
       actionArguments.put(createPipelineArtifactArgument());
     }
     actionJson.put("arguments", actionArguments);
     return actionJson;
   }
 
-  private JSONObject createActionArgument(String name, String value){
+  private JSONObject createActionArgument(String name, String value) {
     JSONObject actionArgument = new JSONObject();
     actionArgument.put("name", name);
     actionArgument.put("value", value);
     return actionArgument;
   }
 
-  private JSONObject createPipelineArtifactArgument(){
+  private JSONObject createPipelineArtifactArgument() {
     JSONObject actionArgument = new JSONObject();
     JSONObject valueObject = new JSONObject();
     valueObject.put("scope", "SYSTEM");
@@ -244,17 +250,13 @@ public class SpecJsonCreator extends AbstractMojo {
     return actionArgument;
   }
 
-  private String filterVersions(String cdapArtifact){
+  private String filterVersions(String cdapArtifact) {
     String empty = "";
-    if (cdapArtifact == null || cdapArtifact.isEmpty()){
+    if (cdapArtifact == null || cdapArtifact.isEmpty()) {
       return empty;
     }
-    if (cdapArtifact.contains("system:wrangler")) {
-      //user defined directives
-      return "[6.1.1, 7.0.0-SNAPSHOT)";
-    }
     int leftBracket = cdapArtifact.indexOf("[");
-    if (leftBracket < 0){
+    if (leftBracket < 0) {
       leftBracket = cdapArtifact.indexOf("(");
     }
     if (leftBracket < 0) {
@@ -265,11 +267,11 @@ public class SpecJsonCreator extends AbstractMojo {
     if (rightBracket < 0) {
       rightBracket = cdapArtifact.indexOf(")");
     }
-    if (rightBracket < 0){
+    if (rightBracket < 0) {
       return empty;
     }
 
-    return cdapArtifact.substring(leftBracket, rightBracket+1);
+    return cdapArtifact.substring(leftBracket, rightBracket + 1);
   }
 
   /**
@@ -298,8 +300,12 @@ public class SpecJsonCreator extends AbstractMojo {
     getLog().info("specVersion          : " + version);
     getLog().info("label                : " + label);
     getLog().info("description          : " + description);
-    getLog().info("author               : " + author);
-    getLog().info("org                  : " + org);
+    if (!Strings.isNullOrEmpty(author)) {
+      getLog().info("author               : " + author);
+    }
+    if (!Strings.isNullOrEmpty(org)) {
+      getLog().info("org                  : " + org);
+    }
     getLog().info("created              : " + created);
     getLog().info("cdapVersion          : " + cdapVersion);
     getLog().info("action type          : " + actionType);
@@ -307,23 +313,23 @@ public class SpecJsonCreator extends AbstractMojo {
     getLog().info("action arg version   : " + version);
     getLog().info("action arg scope     : " + scope);
     getLog().info("action arg config    : " + configFilename);
-    if (categories != null){
+    if (categories != null) {
       getLog().info("categories");
       for (String category : categories) {
         getLog().info(" " + category);
       }
     }
-    if (additionalActionArguments != null){
+    if (additionalActionArguments != null) {
       getLog().info("additionalActionArguments");
       for (String pair[] : additionalActionArguments) {
-        getLog().info(" " + pair[0] + " : " + pair[1] );
+        getLog().info(" " + pair[0] + " : " + pair[1]);
       }
     }
     getLog().info(repeat("-", 72));
   }
 
   /**
-   * Prints footer. 
+   * Prints footer.
    */
   private void printFooter() {
     getLog().info(repeat("-", 72));

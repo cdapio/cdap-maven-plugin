@@ -1,5 +1,23 @@
+/*
+ * Copyright © 2022 Cask Data, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package io.cdap;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,8 +29,6 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuilder;
 import org.apache.maven.project.ProjectBuildingRequest;
 import org.codehaus.plexus.PlexusTestCase;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -23,53 +39,61 @@ import static org.junit.Assert.assertFalse;
 
 public class PipelineJsonMojoTest {
 
-  private final String EXPECTED_PIPELINE_JSON_FILE = "{\"comments\":[],\"processTimingEnabled\":true,\"resources\":{\"memoryMB\":2048,\"virtualCores\":1},\"stageLoggingEnabled\":false,\"schedule\":\"0 * * * *\",\"engine\":\"spark\",\"numOfRecordsPreview\":100,\"postActions\":[],\"stages\":[{\"outputSchema\":\"{\\\"name\\\":\\\"fileRecord\\\",\\\"type\\\":\\\"record\\\",\\\"fields\\\":[{\\\"name\\\":\\\"offset\\\",\\\"type\\\":\\\"long\\\"},{\\\"name\\\":\\\"body\\\",\\\"type\\\":\\\"string\\\"}]}\",\"plugin\":{\"artifact\":{\"scope\":\"SYSTEM\",\"name\":\"core-plugins\",\"version\":\"2.6.0-SNAPSHOT\"},\"name\":\"File\",\"label\":\"File\",\"type\":\"batchsource\",\"properties\":{\"filenameOnly\":\"false\",\"schema\":\"{\\\"name\\\":\\\"fileRecord\\\",\\\"type\\\":\\\"record\\\",\\\"fields\\\":[{\\\"name\\\":\\\"offset\\\",\\\"type\\\":\\\"long\\\"},{\\\"name\\\":\\\"body\\\",\\\"type\\\":\\\"string\\\"}]}\",\"path\":\"test\",\"fileEncoding\":\"UTF-8\",\"format\":\"csv\",\"ignoreNonExistingFolders\":\"false\",\"skipHeader\":\"false\",\"recursive\":\"false\",\"referenceName\":\"test\"}},\"name\":\"File\",\"id\":\"File\"},{\"outputSchema\":[{\"schema\":\"{\\\"name\\\":\\\"fileRecord\\\",\\\"type\\\":\\\"record\\\",\\\"fields\\\":[{\\\"name\\\":\\\"offset\\\",\\\"type\\\":\\\"long\\\"},{\\\"name\\\":\\\"body\\\",\\\"type\\\":\\\"string\\\"}]}\",\"name\":\"etlSchemaBody\"}],\"plugin\":{\"artifact\":{\"scope\":\"SYSTEM\",\"name\":\"transform-plugins\",\"version\":\"2.6.0-SNAPSHOT\"},\"name\":\"CloneRecord\",\"label\":\"Record Duplicator\",\"type\":\"transform\",\"properties\":{\"copies\":\"1\"}},\"inputSchema\":[{\"schema\":\"{\\\"name\\\":\\\"fileRecord\\\",\\\"type\\\":\\\"record\\\",\\\"fields\\\":[{\\\"name\\\":\\\"offset\\\",\\\"type\\\":\\\"long\\\"},{\\\"name\\\":\\\"body\\\",\\\"type\\\":\\\"string\\\"}]}\",\"name\":\"File\"}],\"name\":\"Record Duplicator\",\"id\":\"Record-Duplicator\"},{\"outputSchema\":[{\"schema\":\"{\\\"name\\\":\\\"fileRecord\\\",\\\"type\\\":\\\"record\\\",\\\"fields\\\":[{\\\"name\\\":\\\"offset\\\",\\\"type\\\":\\\"long\\\"},{\\\"name\\\":\\\"body\\\",\\\"type\\\":\\\"string\\\"}]}\",\"name\":\"etlSchemaBody\"}],\"plugin\":{\"artifact\":{\"scope\":\"SYSTEM\",\"name\":\"core-plugins\",\"version\":\"2.6.0-SNAPSHOT\"},\"name\":\"File\",\"label\":\"File2\",\"type\":\"batchsink\",\"properties\":{\"schema\":\"{\\\"name\\\":\\\"fileRecord\\\",\\\"type\\\":\\\"record\\\",\\\"fields\\\":[{\\\"name\\\":\\\"offset\\\",\\\"type\\\":\\\"long\\\"},{\\\"name\\\":\\\"body\\\",\\\"type\\\":\\\"string\\\"}]}\",\"path\":\"test2\",\"format\":\"csv\",\"suffix\":\"yyyy-MM-dd-HH-mm\",\"referenceName\":\"test2\"}},\"inputSchema\":[{\"schema\":\"{\\\"name\\\":\\\"fileRecord\\\",\\\"type\\\":\\\"record\\\",\\\"fields\\\":[{\\\"name\\\":\\\"offset\\\",\\\"type\\\":\\\"long\\\"},{\\\"name\\\":\\\"body\\\",\\\"type\\\":\\\"string\\\"}]}\",\"name\":\"Record Duplicator\"}],\"name\":\"File2\",\"id\":\"File2\"}],\"driverResources\":{\"memoryMB\":2048,\"virtualCores\":1},\"maxConcurrentRuns\":1,\"connections\":[{\"from\":\"File\",\"to\":\"Record Duplicator\"},{\"from\":\"Record Duplicator\",\"to\":\"File2\"}],\"properties\":{}}";
+  private static final String CREATE_PIPELINE_JSON_GOAL = "create-pipeline-json";
+  private static final String EXPECTED_PIPELINE_JSON_FILE_PATH = "src/test/resources/expected_pipeline.json";
+  private static final String EXPORTED_PIPELINE_JSON_FILE_PATH = "src/test/resources/target/test_exported_pipeline-1.0.0.json";
+  private static final String INVALID_PIPELINE_JSON_POM_XML_FILE_PATH = "src/test/resources/test_poms/invalid-pipelineJson-pom.xml";
+  public static final String VALID_PIPELINE_JSON_POM_XML_FILE_PATH = "src/test/resources/test_poms/pipelineJson-pom.xml";
 
   @Rule
   public MojoRule rule = new MojoRule();
 
   @After
   public void cleanUp() throws IOException {
-    File output = new File("src/test/resources/target", "test_exported_pipeline-1.0.0.json");
+    File output = new File(EXPORTED_PIPELINE_JSON_FILE_PATH);
     Files.deleteIfExists(output.toPath());
   }
 
   @Test
   public void execute_pipelineJsonFileProvided_configIsExtracted() throws Exception {
     //GIVEN
-    File testPom = new File(PlexusTestCase.getBasedir(), "src/test/resources/test_poms/pipelineJson-pom.xml");
+    File testPom = new File(VALID_PIPELINE_JSON_POM_XML_FILE_PATH);
 
     ProjectBuildingRequest buildingRequest = newMavenSession(rule).getProjectBuildingRequest();
     ProjectBuilder projectBuilder = rule.lookup(ProjectBuilder.class);
     MavenProject project = projectBuilder.build(testPom, buildingRequest).getProject();
 
     // WHEN
-    PipelineJSON mojo = (PipelineJSON)rule.lookupConfiguredMojo(project, "create-pipeline-json");
+    PipelineJson mojo = (PipelineJson)rule.lookupConfiguredMojo(project, CREATE_PIPELINE_JSON_GOAL);
     mojo.execute();
 
-    // THEN
-    JSONTokener jsonTokener = new JSONTokener(Files.newInputStream(
-        Paths.get("src/test/resources/target/test_exported_pipeline-1.0.0.json")));
-    JSONObject object = new JSONObject(jsonTokener);
+    ObjectMapper mapper = new ObjectMapper();
 
-    assertEquals(EXPECTED_PIPELINE_JSON_FILE, object.toString());
+    // THEN
+    JsonNode result = mapper.readTree(Files.newInputStream(
+        Paths.get(EXPORTED_PIPELINE_JSON_FILE_PATH)));
+
+    JsonNode expected = mapper.readTree(Files.newInputStream(
+        Paths.get(EXPECTED_PIPELINE_JSON_FILE_PATH)));
+
+    assertEquals(expected, result);
   }
 
   @Test(expected = MojoExecutionException.class)
   public void execute_invalidPipelineJsonFileProvided_fileNotExtracted() throws Exception {
     //GIVEN
-    File testPom = new File(PlexusTestCase.getBasedir(), "src/test/resources/test_poms/invalid-pipelineJson-pom.xml");
+    File testPom = new File(PlexusTestCase.getBasedir(), INVALID_PIPELINE_JSON_POM_XML_FILE_PATH);
 
     ProjectBuildingRequest buildingRequest = newMavenSession(rule).getProjectBuildingRequest();
     ProjectBuilder projectBuilder = rule.lookup(ProjectBuilder.class);
     MavenProject project = projectBuilder.build(testPom, buildingRequest).getProject();
 
     // WHEN
-    PipelineJSON mojo = (PipelineJSON)rule.lookupConfiguredMojo(project, "create-pipeline-json");
+    PipelineJson mojo = (PipelineJson)rule.lookupConfiguredMojo(project, CREATE_PIPELINE_JSON_GOAL);
     mojo.execute();
 
     // THEN
-    File output = new File("src/test/resources/target/test_exported_pipeline-1.0.0.json");
+    File output = new File(EXPORTED_PIPELINE_JSON_FILE_PATH);
 
     assertFalse(output.exists());
   }

@@ -1,3 +1,19 @@
+/*
+ * Copyright © 2022 Cask Data, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package io.cdap;
 
 import java.io.File;
@@ -36,6 +52,15 @@ public class ArtifactPackager extends AbstractMojo {
 
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
+    String currentPath = null;
+    try {
+      currentPath = new File(".").getCanonicalPath();
+      getLog().info("Working Directory = " + System.getProperty("user.dir"));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    getLog().info("Current dir:" + currentPath);
+
     File outputDirectory = Paths.get(relativeOutputDir, artifactId, version).toFile();
     File iconDirectory = new File(baseDirectory, iconsDirectory);
 
@@ -52,10 +77,10 @@ public class ArtifactPackager extends AbstractMojo {
     moveFile(outputDirectory, "spec.json");
 
     //icon file
-    if (iconDirectory.exists()){
+    if (iconDirectory.exists()) {
       File[] iconFiles = iconDirectory.listFiles();
       if (iconFiles != null) {
-        for (File icon : iconFiles){
+        for (File icon : iconFiles) {
           moveFile(outputDirectory, icon, icon.getName());
         }
       }
@@ -64,7 +89,7 @@ public class ArtifactPackager extends AbstractMojo {
 
   private void moveFile(File outputDirectory, String fileName) {
     File artifactSource = new File(buildDirectory, fileName);
-    if (artifactSource.exists()){
+    if (artifactSource.exists()) {
       moveFile(outputDirectory, artifactSource, fileName);
     } else {
       // Warning as jar may not exist for pipeline based artifacts

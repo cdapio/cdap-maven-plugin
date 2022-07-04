@@ -44,25 +44,25 @@ The generated file will be placed in the `${project.build}` directory.
 
 ```
 <plugin>
-  <groupId>com.liveramp.cdap.plugin</groupId>
+  <groupId>co.cask</groupId>
   <version>1.1.3</version>
   <artifactId>cdap-maven-plugin</artifactId>
   <configuration>
     <cdapArtifacts>
-       <parent>system:cdap-data-pipeline[4.0.0,9.0.0-SNAPSHOT)</parent>
-       <parent>system:cdap-data-streams[4.0.0,9.0.0-SNAPSHOT)</parent>
+      <parent>system:cdap-data-pipeline[4.0.0,9.0.0-SNAPSHOT)</parent>
+      <parent>system:cdap-data-streams[4.0.0,9.0.0-SNAPSHOT)</parent>
     </cdapArtifacts>
-   </configuration>
-   <executions>
-     <execution>
+  </configuration>
+  <executions>
+    <execution>
        <id>create-artifact-config</id>
        <phase>prepare-package</phase>
        <goals>
          <goal>create-plugin-json</goal>
        </goals>
-     </execution>
-   </executions>
- </plugin>
+    </execution>
+  </executions>
+</plugin>
 ```
 
 #### Output
@@ -135,75 +135,75 @@ Including both `create-plugin-json` and `create-plugin-spec-json` goals
 
 ```
 <plugin>
-<groupId>com.liveramp.cdap.plugin</groupId>
-<version>1.1.3</version>
-<artifactId>cdap-maven-plugin</artifactId>
-<configuration>
-  <cdapArtifacts>
-    <parent>system:cdap-data-pipeline[6.0.0-SNAPSHOT,9.0.0-SNAPSHOT)</parent>
-    <parent>system:cdap-data-streams[6.0.0-SNAPSHOT,9.0.0-SNAPSHOT)</parent>
-  </cdapArtifacts>
-  <author>LiveRamp</author>
-  <org>LiveRamp</org>
-  <description>optional plugin description</description>
-  <categories>
-    <category>cat1</category>
-    <category>cat2</category>
-  </categories>
-  <additionalActionArguments>
-    <argument>
-      <key>jar</key>
-      <value>${project.artifactId}-${project.version}.jar</value>
-    </argument>
-  </additionalActionArguments>
-  <scope>user</scope>
-</configuration>
-<executions>
-  <execution>
-    <id>create-artifact-config</id>
-    <phase>prepare-package</phase>
-    <goals>
-      <goal>create-plugin-json</goal>
-      <goal>create-plugin-spec-json</goal>
-    </goals>
-  </execution>
-</executions>
+  <groupId>co.cask</groupId>
+  <version>1.1.3</version>
+  <artifactId>cdap-maven-plugin</artifactId>
+  <configuration>
+    <cdapArtifacts>
+      <parent>system:cdap-data-pipeline[6.0.0-SNAPSHOT,9.0.0-SNAPSHOT)</parent>
+      <parent>system:cdap-data-streams[6.0.0-SNAPSHOT,9.0.0-SNAPSHOT)</parent>
+    </cdapArtifacts>
+    <author>LiveRamp</author>
+    <org>LiveRamp</org>
+    <description>optional plugin description</description>
+    <categories>
+      <category>cat1</category>
+      <category>cat2</category>
+    </categories>
+    <additionalActionArguments>
+      <argument>
+        <key>jar</key>
+        <value>${project.artifactId}-${project.version}.jar</value>
+      </argument>
+    </additionalActionArguments>
+    <scope>user</scope>
+  </configuration>
+  <executions>
+    <execution>
+      <id>create-artifact-config</id>
+      <phase>prepare-package</phase>
+      <goals>
+        <goal>create-plugin-json</goal>
+        <goal>create-plugin-spec-json</goal>
+      </goals>
+    </execution>
+  </executions>
 </plugin>
 ```
 
 Including only `create-plugin-spec-json` goal
 
 ```
-       <plugins>
-         <plugin>
-           <groupId>com.liveramp.cdap.plugin</groupId>
-           <artifactId>cdap-maven-plugin</artifactId>
-           <version>1.1.3</version>
-           <configuration>
-             <cdapArtifacts>
-               <parent>system:cdap-data-pipeline[6.0.0-SNAPSHOT,9.0.0-SNAPSHOT)</parent>
-               <parent>system:cdap-data-streams[6.0.0-SNAPSHOT,9.0.0-SNAPSHOT)</parent>
-             </cdapArtifacts>
-             <categories>
-                 <param>cat1</param>
-             </categories>
-             <actionType>create_pipeline_draft</actionType>
-             <isPipeline>true</isPipeline>
-           </configuration>
-           <executions>
-             <execution>
-               <id>create-artifact-config</id>
-               <phase>prepare-package</phase>
-               <goals>
-                 <goal>create-plugin-spec-json</goal>
-               </goals>
-             </execution>
-           </executions>
-         </plugin>
-       </plugins>
-     </build>
-   
-   </project>
+<plugins>
+ <plugin>
+   <groupId>co.cask</groupId>
+   <artifactId>cdap-maven-plugin</artifactId>
+   <version>1.1.3</version>
+   <configuration>
+     <cdapArtifacts>
+       <parent>system:cdap-data-pipeline[6.0.0-SNAPSHOT,9.0.0-SNAPSHOT)</parent>
+       <parent>system:cdap-data-streams[6.0.0-SNAPSHOT,9.0.0-SNAPSHOT)</parent>
+     </cdapArtifacts>
+     <categories>
+         <param>cat1</param>
+     </categories>
+     <actionType>create_pipeline_draft</actionType>
+     <isPipeline>true</isPipeline>
+   </configuration>
+   <executions>
+     <execution>
+       <id>create-artifact-config</id>
+       <phase>prepare-package</phase>
+       <goals>
+         <goal>create-plugin-spec-json</goal>
+       </goals>
+     </execution>
+   </executions>
+ </plugin>
+</plugins>
+</build>
+
+</project>
 ```
 
 #### Output
@@ -213,7 +213,7 @@ Including only `create-plugin-spec-json` goal
 [INFO] CDAP Plugin JSON
 [INFO] ------------------------------------------------------------------------
 [INFO] Project              : Adhoc SQL Plugin
-[INFO] Group ID             : com.liveramp.cdap.plugin
+[INFO] Group ID             : co.cask
 [INFO] Artifact ID          : adhoc_sql
 [INFO] Version              : 0.1.0
 [INFO] Base Directory       : /Users/user1/code/cdap-plugins/lsh/misc/adhoc_sql
@@ -276,27 +276,27 @@ To simplify the `relativeOutputDir` value the `directory-maven-plugin` should be
 
 **Example of `directory-maven-plugin` plugin configuration to have in parent pom.xml**
 ```
-      <plugin>
-        <groupId>org.commonjava.maven.plugins</groupId>
-        <artifactId>directory-maven-plugin</artifactId>
-        <version>0.3.1</version>
-        <executions>
-          <execution>
-            <id>directories</id>
-            <goals>
-              <goal>directory-of</goal>
-            </goals>
-            <phase>initialize</phase>
-            <configuration>
-              <property>parent_module.basedir</property>
-              <project>
-                <groupId>com.org.groupId</groupId>
-                <artifactId>artifactId</artifactId>
-              </project>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
+<plugin>
+  <groupId>org.commonjava.maven.plugins</groupId>
+  <artifactId>directory-maven-plugin</artifactId>
+  <version>0.3.1</version>
+  <executions>
+    <execution>
+      <id>directories</id>
+      <goals>
+        <goal>directory-of</goal>
+      </goals>
+      <phase>initialize</phase>
+      <configuration>
+        <property>parent_module.basedir</property>
+        <project>
+          <groupId>com.org.groupId</groupId>
+          <artifactId>artifactId</artifactId>
+        </project>
+      </configuration>
+    </execution>
+  </executions>
+</plugin>
 ```
 
 Using this simplifies `relativeOutputDir` value to `${parent_module.basedir}/packages`.<br>
@@ -308,58 +308,58 @@ The goal must be run after any pre-package goals specified. In order to do this 
 to be applied.
 
 ```
-  <execution>
-    <goals>
-      <goal>package-artifacts-for-hub</goal>
-    </goals>
-    <id>move-artifacts</id>
-    <phase>package</phase>
-  </execution>
+<execution>
+  <goals>
+    <goal>package-artifacts-for-hub</goal>
+  </goals>
+  <id>move-artifacts</id>
+  <phase>package</phase>
+</execution>
 ```
 
 #### Example POM
 
 ```
-  <plugin>
-    <groupId>com.liveramp.cdap.plugin</groupId>
-    <version>1.1.3</version>
-    <artifactId>cdap-maven-plugin</artifactId>
-    <configuration>
-      <cdapArtifacts>
-        <parent>system:cdap-data-pipeline[6.1.0-SNAPSHOT,7.0.0-SNAPSHOT)</parent>
-        <parent>system:cdap-data-streams[6.1.0-SNAPSHOT,7.0.0-SNAPSHOT)</parent>
-      </cdapArtifacts>
-      <additionalActionArguments>
-        <argument>
-          <key>jar</key>
-          <value>${project.artifactId}-${project.version}.jar</value>
-        </argument>
-      </additionalActionArguments>
-      <scope>user</scope>
-      <author>LiveRamp</author>
-      <org>LiveRamp</org>
-      <description>optional plugin description</description>
-      <!-- Using directory maven plugin -->
-      <relativeOutputDir>${parent_module.basedir}/packages</relativeOutputDir>
-    </configuration>
-    <executions>
-      <execution>
-        <goals>
-          <goal>create-plugin-json</goal>
-          <goal>create-plugin-spec-json</goal>
-        </goals>
-        <id>create-artifact-config</id>
-        <phase>prepare-package</phase>
-      </execution>
-      <execution>
-        <goals>
-          <goal>package-artifacts-for-hub</goal>
-        </goals>
-        <id>move-artifacts</id>
-        <phase>package</phase>
-      </execution>
-    </executions>
-  </plugin>
+<plugin>
+  <groupId>co.cask</groupId>
+  <version>1.1.3</version>
+  <artifactId>cdap-maven-plugin</artifactId>
+  <configuration>
+    <cdapArtifacts>
+      <parent>system:cdap-data-pipeline[6.1.0-SNAPSHOT,7.0.0-SNAPSHOT)</parent>
+      <parent>system:cdap-data-streams[6.1.0-SNAPSHOT,7.0.0-SNAPSHOT)</parent>
+    </cdapArtifacts>
+    <additionalActionArguments>
+      <argument>
+        <key>jar</key>
+        <value>${project.artifactId}-${project.version}.jar</value>
+      </argument>
+    </additionalActionArguments>
+    <scope>user</scope>
+    <author>LiveRamp</author>
+    <org>LiveRamp</org>
+    <description>optional plugin description</description>
+    <!-- Using directory maven plugin -->
+    <relativeOutputDir>${parent_module.basedir}/packages</relativeOutputDir>
+  </configuration>
+  <executions>
+    <execution>
+      <goals>
+        <goal>create-plugin-json</goal>
+        <goal>create-plugin-spec-json</goal>
+      </goals>
+      <id>create-artifact-config</id>
+      <phase>prepare-package</phase>
+    </execution>
+    <execution>
+      <goals>
+        <goal>package-artifacts-for-hub</goal>
+      </goals>
+      <id>move-artifacts</id>
+      <phase>package</phase>
+    </execution>
+  </executions>
+</plugin>
 ```
 
 #### Output
@@ -418,7 +418,7 @@ If the path is not correct you will see a
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <name>Test Exported Pipeline</name>
-  <groupId>com.liveramp.cdap.plugin</groupId>
+  <groupId>co.cask</groupId>
   <artifactId>test_exported_pipeline</artifactId>
   <version>1.0.0</version>
   <modelVersion>4.0.0</modelVersion>
@@ -432,7 +432,7 @@ If the path is not correct you will see a
   <build>
     <plugins>
       <plugin>
-        <groupId>com.liveramp.cdap.plugin</groupId>
+        <groupId>co.cask</groupId>
         <version>1.1.3</version>
         <artifactId>cdap-maven-plugin</artifactId>
         <configuration>

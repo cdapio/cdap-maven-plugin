@@ -3,6 +3,7 @@
 .beamer
 # Package Files #
 *.jar
+!src/test/resources/test_build_dir/artifact-1.0.0.jar
 *.war
 *.ear
 

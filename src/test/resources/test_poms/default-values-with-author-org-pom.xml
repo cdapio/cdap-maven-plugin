@@ -14,50 +14,61 @@
   ~ the License.
   -->
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
   <name>Adhoc SQL Plugin</name>
   <description>Optional description</description>
-  <artifactId>artifact</artifactId>
-  <version>1.0.0</version>
+  <groupId>io.cdap</groupId>
+  <artifactId>adhoc_sql</artifactId>
+  <version>0.1.0</version>
   <modelVersion>4.0.0</modelVersion>
   <packaging>jar</packaging>
-
-  <parent>
-    <groupId>io.cdap</groupId>
-    <artifactId>artifactpackager-parent-pom</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-    <relativePath>./pom.xml</relativePath>
-  </parent>
 
   <properties>
     <app.parents>system:cdap-data-pipeline[4.0.0,7.0.0),system:cdap-data-streams[4.0.0,7.0.0)</app.parents>
     <main.basedir>${project.basedir}</main.basedir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
+    <author>author1</author>
+    <org>org1</org>
   </properties>
 
   <build>
+    <directory>../</directory>
     <plugins>
       <plugin>
         <groupId>io.cdap</groupId>
         <artifactId>cdap-maven-plugin</artifactId>
         <version>1.2.0-SNAPSHOT</version>
         <configuration>
-          <relativeOutputDir>${project.basedir}/../packages</relativeOutputDir>
+          <cdapArtifacts>
+            <parent>system:cdap-data-pipeline[6.0.0-SNAPSHOT,9.0.0-SNAPSHOT)</parent>
+            <parent>system:cdap-data-streams[6.0.0-SNAPSHOT,9.0.0-SNAPSHOT)</parent>
+          </cdapArtifacts>
+          <categories>
+              <param>cat1</param>
+              <param>cat2</param>
+              <param>cat3</param>
+              <param>adil</param>
+          </categories>
+          <additionalActionArguments>
+            <argument>
+              <key>jar</key>
+              <value>${project.artifactId}-${project.version}.jar</value>
+            </argument>
+          </additionalActionArguments>
         </configuration>
         <executions>
           <execution>
-            <id>move-artifacts</id>
-            <phase>package</phase>
+            <id>create-artifact-config</id>
+            <phase>prepare-package</phase>
             <goals>
-              <goal>package-artifacts-for-hub</goal>
+              <goal>create-plugin-json</goal>
+              <goal>create-plugin-spec-json</goal>
             </goals>
           </execution>
         </executions>
       </plugin>
     </plugins>
-    <directory>../test_build_dir</directory>
   </build>
 
 </project>

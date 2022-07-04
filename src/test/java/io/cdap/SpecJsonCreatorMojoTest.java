@@ -1,3 +1,19 @@
+/*
+ * Copyright © 2022 Cask Data, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 package io.cdap;
 
 import java.io.File;
@@ -41,8 +57,34 @@ public class SpecJsonCreatorMojoTest {
 
     assertEquals("0.1.0", object.get("specVersion"));
     assertEquals("Adhoc SQL Plugin", object.get("label"));
-    assertEquals("Liveramp", object.get("org"));
-    assertEquals("Liveramp", object.get("author"));
+    assertFalse(object.has("org"));
+    assertFalse(object.has("author"));
+    assertEquals("Optional description", object.get("description"));
+    assertEquals("one_step_deploy_plugin", object.getJSONArray("actions").getJSONObject(0).get("type"));
+    assertEquals("Adhoc SQL Plugin", object.getJSONArray("actions").getJSONObject(0).get("label"));
+  }
+
+  @Test
+  public void execute_pluginIsConfiguredWithMinimumValues_specJsonIsGeneratedWithDefaultAuthorOrgValuesInjected() throws Exception {
+    // GIVEN
+    File testPom = new File(PlexusTestCase.getBasedir(), "src/test/resources/test_poms/default-values-with-author-org-pom.xml");
+
+    ProjectBuildingRequest buildingRequest = newMavenSession(rule).getProjectBuildingRequest();
+    ProjectBuilder projectBuilder = rule.lookup(ProjectBuilder.class);
+    MavenProject project = projectBuilder.build(testPom, buildingRequest).getProject();
+
+    // WHEN
+    SpecJsonCreator mojo = (SpecJsonCreator) rule.lookupConfiguredMojo(project, "create-plugin-spec-json");
+    mojo.execute();
+
+    // THEN
+    JSONTokener jsonTokener = new JSONTokener(Files.newInputStream(Paths.get("src/test/resources/spec.json")));
+    JSONObject object = new JSONObject(jsonTokener);
+
+    assertEquals("0.1.0", object.get("specVersion"));
+    assertEquals("Adhoc SQL Plugin", object.get("label"));
+    assertEquals("org1", object.get("org"));
+    assertEquals("author1", object.get("author"));
     assertEquals("Optional description", object.get("description"));
     assertEquals("one_step_deploy_plugin", object.getJSONArray("actions").getJSONObject(0).get("type"));
     assertEquals("Adhoc SQL Plugin", object.getJSONArray("actions").getJSONObject(0).get("label"));
@@ -92,7 +134,7 @@ public class SpecJsonCreatorMojoTest {
     assertEquals(expectedPipelineSpec(), artifactObject.toString());
   }
 
-  private String expectedPipelineSpec(){
+  private String expectedPipelineSpec() {
     return "{\"scope\":\"SYSTEM\",\"name\":\"cdap-data-pipeline\",\"version\":\"[6.1.1, 7.0.0-SNAPSHOT)\"}";
   }
 

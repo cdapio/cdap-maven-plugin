@@ -18,7 +18,7 @@
 
   <name>Adhoc SQL Plugin</name>
   <description>Optional description</description>
-  <groupId>com.liveramp.cdap.plugin</groupId>
+  <groupId>co.cask</groupId>
   <artifactId>artifact</artifactId>
   <version>1.0.0</version>
   <modelVersion>4.0.0</modelVersion>
@@ -34,7 +34,7 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>com.liveramp.cdap.plugin</groupId>
+        <groupId>co.cask</groupId>
         <artifactId>cdap-maven-plugin</artifactId>
         <version>1.1.4</version>
         <configuration>
