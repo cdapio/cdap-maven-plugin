@@ -44,8 +44,8 @@ public class ArtifactPackagerMojoTest {
 
     String baseDir = PlexusTestCase.getBasedir();
     File testPom = new File(baseDir, "src/test/resources/test_poms/artifactPackager-pom.xml");
-    assertNotNull( testPom );
-    assertTrue( testPom.exists() );
+    assertNotNull(testPom);
+    assertTrue(testPom.exists());
 
     ProjectBuildingRequest buildingRequest = newMavenSession(rule).getProjectBuildingRequest();
     ProjectBuilder projectBuilder = rule.lookup(ProjectBuilder.class);
