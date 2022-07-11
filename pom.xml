@@ -5,7 +5,7 @@
   <name>CDAP Maven Plugin</name>
   <groupId>io.cdap</groupId>
   <artifactId>cdap-maven-plugin</artifactId>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.3.0-SNAPSHOT</version>
   <packaging>maven-plugin</packaging>
   <description>CDAP Maven Plugin</description>
   <url>http://cdap.io</url>
