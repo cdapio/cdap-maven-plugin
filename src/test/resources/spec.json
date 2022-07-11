@@ -1,0 +1,43 @@
+{
+  "specVersion": "versionTest",
+  "org": "orgTest",
+  "author": "authorTest",
+  "created": 1656949104809,
+  "cdapVersion": "[6.0.0-SNAPSHOT,9.0.0-SNAPSHOT)",
+  "description": "descriptionTest",
+  "label": "labelTest",
+  "categories": [
+    "categoryTest1",
+    "categoryTest2"
+  ],
+  "actions": [{
+    "arguments": [
+      {
+        "name": "name",
+        "value": "artifactIdTest"
+      },
+      {
+        "name": "version",
+        "value": "versionTest"
+      },
+      {
+        "name": "scope",
+        "value": "scopeTest"
+      },
+      {
+        "name": "config",
+        "value": "artifactIdTest-versionTest.json"
+      },
+      {
+        "name": "arg1key",
+        "value": "arg1value"
+      },
+      {
+        "name": "arg2key",
+        "value": "arg2value"
+      }
+    ],
+    "label": "labelTest",
+    "type": "one_step_deploy_plugin"
+  }]
+}

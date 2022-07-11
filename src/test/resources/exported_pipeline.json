@@ -1,0 +1,129 @@
+{
+    "artifact": {
+        "label": "Data Pipeline - Batch",
+        "name": "cdap-data-pipeline",
+        "scope": "SYSTEM",
+        "version": "6.4.0-SNAPSHOT"
+    },
+    "config": {
+        "comments": [],
+        "connections": [
+            {
+                "from": "File",
+                "to": "Record Duplicator"
+            },
+            {
+                "from": "Record Duplicator",
+                "to": "File2"
+            }
+        ],
+        "driverResources": {
+            "memoryMB": 2048,
+            "virtualCores": 1
+        },
+        "engine": "spark",
+        "maxConcurrentRuns": 1,
+        "numOfRecordsPreview": 100,
+        "postActions": [],
+        "processTimingEnabled": true,
+        "properties": {},
+        "resources": {
+            "memoryMB": 2048,
+            "virtualCores": 1
+        },
+        "schedule": "0 * * * *",
+        "stageLoggingEnabled": false,
+        "stages": [
+            {
+                "id": "File",
+                "name": "File",
+                "outputSchema": "{\"name\":\"fileRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+                "plugin": {
+                    "artifact": {
+                        "name": "core-plugins",
+                        "scope": "SYSTEM",
+                        "version": "2.6.0-SNAPSHOT"
+                    },
+                    "label": "File",
+                    "name": "File",
+                    "properties": {
+                        "fileEncoding": "UTF-8",
+                        "filenameOnly": "false",
+                        "format": "csv",
+                        "ignoreNonExistingFolders": "false",
+                        "path": "test",
+                        "recursive": "false",
+                        "referenceName": "test",
+                        "schema": "{\"name\":\"fileRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+                        "skipHeader": "false"
+                    },
+                    "type": "batchsource"
+                }
+            },
+            {
+                "id": "Record-Duplicator",
+                "inputSchema": [
+                    {
+                        "name": "File",
+                        "schema": "{\"name\":\"fileRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "name": "Record Duplicator",
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "{\"name\":\"fileRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "plugin": {
+                    "artifact": {
+                        "name": "transform-plugins",
+                        "scope": "SYSTEM",
+                        "version": "2.6.0-SNAPSHOT"
+                    },
+                    "label": "Record Duplicator",
+                    "name": "CloneRecord",
+                    "properties": {
+                        "copies": "1"
+                    },
+                    "type": "transform"
+                }
+            },
+            {
+                "id": "File2",
+                "inputSchema": [
+                    {
+                        "name": "Record Duplicator",
+                        "schema": "{\"name\":\"fileRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "name": "File2",
+                "outputSchema": [
+                    {
+                        "name": "etlSchemaBody",
+                        "schema": "{\"name\":\"fileRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}"
+                    }
+                ],
+                "plugin": {
+                    "artifact": {
+                        "name": "core-plugins",
+                        "scope": "SYSTEM",
+                        "version": "2.6.0-SNAPSHOT"
+                    },
+                    "label": "File2",
+                    "name": "File",
+                    "properties": {
+                        "format": "csv",
+                        "path": "test2",
+                        "referenceName": "test2",
+                        "schema": "{\"name\":\"fileRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+                        "suffix": "yyyy-MM-dd-HH-mm"
+                    },
+                    "type": "batchsink"
+                }
+            }
+        ]
+    },
+    "description": "",
+    "name": ""
+}

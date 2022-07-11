@@ -1,0 +1,57 @@
+<!--
+  ~ Copyright © 2016-2018 Cask Data, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License"); you may not
+  ~ use this file except in compliance with the License. You may obtain a copy of
+  ~ the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations under
+  ~ the License.
+  -->
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <name>Adhoc SQL Plugin</name>
+  <description>Optional description</description>
+  <groupId>co.cask</groupId>
+  <artifactId>artifact</artifactId>
+  <version>1.0.0</version>
+  <modelVersion>4.0.0</modelVersion>
+  <packaging>jar</packaging>
+
+  <properties>
+    <app.parents>system:cdap-data-pipeline[4.0.0,7.0.0),system:cdap-data-streams[4.0.0,7.0.0)</app.parents>
+    <main.basedir>${project.basedir}</main.basedir>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>co.cask</groupId>
+        <artifactId>cdap-maven-plugin</artifactId>
+        <version>1.1.4</version>
+        <configuration>
+        </configuration>
+        <executions>
+          <execution>
+            <id>move-artifacts</id>
+            <phase>package</phase>
+            <goals>
+              <goal>package-artifacts-for-hub</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+      <directory>../test_build_dir</directory>
+  </build>
+
+</project>
+

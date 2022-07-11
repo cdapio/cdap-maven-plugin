@@ -1,0 +1,119 @@
+{
+  "comments": [],
+  "processTimingEnabled": true,
+  "resources": {
+    "memoryMB": 2048,
+    "virtualCores": 1
+  },
+  "stageLoggingEnabled": false,
+  "schedule": "0 * * * *",
+  "engine": "spark",
+  "numOfRecordsPreview": 100,
+  "postActions": [],
+  "stages": [
+    {
+      "outputSchema": "{\"name\":\"fileRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+      "plugin": {
+        "artifact": {
+          "scope": "SYSTEM",
+          "name": "core-plugins",
+          "version": "2.6.0-SNAPSHOT"
+        },
+        "name": "File",
+        "label": "File",
+        "type": "batchsource",
+        "properties": {
+          "filenameOnly": "false",
+          "schema": "{\"name\":\"fileRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+          "path": "test",
+          "fileEncoding": "UTF-8",
+          "format": "csv",
+          "ignoreNonExistingFolders": "false",
+          "skipHeader": "false",
+          "recursive": "false",
+          "referenceName": "test"
+        }
+      },
+      "name": "File",
+      "id": "File"
+    },
+    {
+      "outputSchema": [
+        {
+          "schema": "{\"name\":\"fileRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+          "name": "etlSchemaBody"
+        }
+      ],
+      "plugin": {
+        "artifact": {
+          "scope": "SYSTEM",
+          "name": "transform-plugins",
+          "version": "2.6.0-SNAPSHOT"
+        },
+        "name": "CloneRecord",
+        "label": "Record Duplicator",
+        "type": "transform",
+        "properties": {
+          "copies": "1"
+        }
+      },
+      "inputSchema": [
+        {
+          "schema": "{\"name\":\"fileRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+          "name": "File"
+        }
+      ],
+      "name": "Record Duplicator",
+      "id": "Record-Duplicator"
+    },
+    {
+      "outputSchema": [
+        {
+          "schema": "{\"name\":\"fileRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+          "name": "etlSchemaBody"
+        }
+      ],
+      "plugin": {
+        "artifact": {
+          "scope": "SYSTEM",
+          "name": "core-plugins",
+          "version": "2.6.0-SNAPSHOT"
+        },
+        "name": "File",
+        "label": "File2",
+        "type": "batchsink",
+        "properties": {
+          "schema": "{\"name\":\"fileRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+          "path": "test2",
+          "format": "csv",
+          "suffix": "yyyy-MM-dd-HH-mm",
+          "referenceName": "test2"
+        }
+      },
+      "inputSchema": [
+        {
+          "schema": "{\"name\":\"fileRecord\",\"type\":\"record\",\"fields\":[{\"name\":\"offset\",\"type\":\"long\"},{\"name\":\"body\",\"type\":\"string\"}]}",
+          "name": "Record Duplicator"
+        }
+      ],
+      "name": "File2",
+      "id": "File2"
+    }
+  ],
+  "driverResources": {
+    "memoryMB": 2048,
+    "virtualCores": 1
+  },
+  "maxConcurrentRuns": 1,
+  "connections": [
+    {
+      "from": "File",
+      "to": "Record Duplicator"
+    },
+    {
+      "from": "Record Duplicator",
+      "to": "File2"
+    }
+  ],
+  "properties": {}
+}

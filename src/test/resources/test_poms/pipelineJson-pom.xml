@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <name>Test Exported Pipeline</name>
+  <groupId>io.cdap</groupId>
+  <artifactId>test_exported_pipeline</artifactId>
+  <version>1.0.0</version>
+  <modelVersion>4.0.0</modelVersion>
+
+  <properties>
+    <main.basedir>${project.basedir}</main.basedir>
+    <!-- properties for script build step that creates the config files for the artifacts -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.cdap</groupId>
+        <version>1.1.4</version>
+        <artifactId>cdap-maven-plugin</artifactId>
+        <configuration>
+          <pipelineJsonFile>${basedir}/../exported_pipeline.json</pipelineJsonFile>
+        </configuration>
+        <executions>
+          <execution>
+            <id>create-artifact-config</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>create-pipeline-json</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+    <directory>../target</directory>
+  </build>
+</project>
